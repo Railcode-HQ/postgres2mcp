@@ -6,6 +6,8 @@ Create custom tools from parametrized SQL and determine what tools are accessibl
 
 ![postgres2mcp dashboard](docs/images/overview.png)
 
+> This README is written by a human and is meant for humans. The docs are written by an agent and made for agents.
+
 ## 🚀 Get started
 
 
