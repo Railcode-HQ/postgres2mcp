@@ -72,7 +72,9 @@ An MCP client can then call it with `fetch_users_by_org(123)`. You can also set 
 
 e.g. API key `john-doe-from-growth` gets access to `referral_sources`, `mrr_by_customer`, and `organization_details`, but does not get access to run arbitrary SQL or create new tools
 
-6. Monitor usage logs and analytics from the dashboard
+6. Users connect to the MCP from their agent using the API key provided to them with access to the tools the key has access to
+
+7. Monitor usage logs and analytics from the dashboard
 
 
 ## Security
