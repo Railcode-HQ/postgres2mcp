@@ -90,7 +90,7 @@ Also make sure you:
 
 Lastly, note that this repo has been kept intentionally small so it should be very easy for a human or coding agent to audit its security.
 
-## Using with Railcode
+## Using with [Railcode](https://railcode.dev)
 
 `postgres2mcp` can be used with Railcode by adding it as a "Custom MCP" connector in Railcode.
 
