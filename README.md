@@ -4,7 +4,10 @@
 
 Create custom tools from parametrized SQL and determine what tools are accessible or blocked for each generated API key.
 
-## Install
+![postgres2mcp dashboard](docs/images/dashboard-overview.png)
+
+## 🚀 Get started
+
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/Railcode-HQ/postgres2mcp/main/install.sh | bash
@@ -83,11 +86,14 @@ Also make sure you:
 * Follow the principle of least privilege and set up an appropriate role that `postgres2mcp` has access to.
 * Set a strong admin password. We intend to add support for 2FA for admins soon.
 
+Lastly, note that this repo has been kept intentionally small so it should be very easy for a human or coding agent to audit its security.
+
 ## Using with Railcode
 
 `postgres2mcp` can be used with Railcode by adding it as a "Custom MCP" connector in Railcode.
 
 Railcode provides you with all the granular permissions management features that `postgres2mcp` offers, but if you're more comfortable managing them from `postgres2mcp`, you can create multiple API keys and set up various MCP connectors in Railcode, each tied to a `postgres2mcp` key with different permissions.
+
 
 ## License
 
