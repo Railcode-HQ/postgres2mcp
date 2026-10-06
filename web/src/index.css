@@ -1,0 +1,240 @@
+@import "tailwindcss";
+
+/* Class-based dark mode: `.dark` on <html> flips the token set. */
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Tokens — a quiet instrument panel for a database.
+ * Light: paper-white canvas, blueprint-navy ink, one signal-blue accent.
+ * Dark:  neutral greys, hairline borders, the same blue brightened to hold up.
+ * Color only ever means something: blue = action/identity, green = clear,
+ * red = stop, amber = withheld. Structure is carried by surface lightness and
+ * hairline borders, never by decoration.
+ */
+:root {
+  --background: #ffffff; /* main content — the lightest surface */
+  --foreground: #1a1f36; /* primary ink — warm near-black */
+  --card: #ffffff;
+  --card-foreground: #1a1f36;
+  --popover: #ffffff;
+  --popover-foreground: #1a1f36;
+  --sidebar: #f6f7f9;
+  --shell: #f4f4f4; /* window backdrop the content panel floats on */
+  --scrim: rgba(26, 31, 54, 0.32); /* dims the page behind a dialog; the page stays legible */
+
+  --primary: #2563eb; /* signal blue */
+  --primary-foreground: #ffffff;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #3c4257;
+  --muted: #f5f6f8;
+  --muted-foreground: #687385;
+  --accent: #f0f1f4;
+  --accent-foreground: #1a1f36;
+
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+
+  --border: #e6e8eb; /* hairline */
+  --input: #dfe3e8;
+  --ring: #2563eb;
+
+  /* Tool editor: caller params wear the signal blue; a problem is amber. */
+  --sq-param-ink: #1d4ed8;
+  --sq-param-bg: rgba(37, 99, 235, 0.1);
+  --sq-error-ink: #b45309;
+  --sq-error-bg: rgba(180, 83, 9, 0.1);
+  --sq-sheet: #fafbfc; /* the code sheet — a hair inset from the page */
+
+  /* Charts. One hue for volume; the two outcome colours are reserved for
+   * outcomes and validated as a set (CVD + contrast) against --card. */
+  --chart-ok: #2563eb;
+  --chart-denied: #eda100;
+  --chart-error: #d03b3b;
+  --chart-grid: #eceef1;
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: #18181b;
+  --foreground: #ededee;
+  --card: #1f1f23;
+  --card-foreground: #ededee;
+  --popover: #1f1f23;
+  --popover-foreground: #ededee;
+  --sidebar: #121214;
+  --shell: #0e0e10;
+  --scrim: rgba(0, 0, 0, 0.6);
+
+  --primary: #60a5fa;
+  --primary-foreground: #18181b;
+  --secondary: #232327;
+  --secondary-foreground: #d4d4d8;
+  --muted: #232327;
+  --muted-foreground: #9b9ba3;
+  --accent: #27272b;
+  --accent-foreground: #ededee;
+
+  --destructive: #f97066;
+  --destructive-foreground: #18181b;
+
+  --border: #2c2c31;
+  --input: #34343a;
+  --ring: #60a5fa;
+
+  --sq-param-ink: #93c5fd;
+  --sq-param-bg: rgba(96, 165, 250, 0.14);
+  --sq-error-ink: #d9930d;
+  --sq-error-bg: rgba(217, 147, 13, 0.12);
+  --sq-sheet: #141417;
+
+  --chart-ok: #3987e5;
+  --chart-denied: #c98500;
+  --chart-error: #d03b3b;
+  --chart-grid: #2a2a2f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-shell: var(--shell);
+  --color-scrim: var(--scrim);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas,
+    "Liberation Mono", monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    min-width: 320px;
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  /* Tabular figures wherever numbers must align (counts, timestamps, durations). */
+  code,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* ── Tool editor decorations (Monaco inline classes) ─────────────────────
+   * !important because Monaco colors tokens via its own theme classes on the
+   * same spans — the param wash must win. */
+  .monaco-editor .sq-param {
+    color: var(--sq-param-ink) !important;
+    background: var(--sq-param-bg);
+    border-radius: 3px;
+  }
+
+  .monaco-editor .sq-flash {
+    outline: 1px solid var(--ring);
+    border-radius: 3px;
+  }
+
+  /* ── First-run guide ─────────────────────────────────────────────────────
+   * The motion there is, and all of it about a call: a ring leaving the dot
+   * while a page listens, the first call settling into place, and the signal
+   * in the mark being drawn as that call leaves the database. Each rests in
+   * its final state, so nothing is hidden when motion is off. */
+  @media (prefers-reduced-motion: no-preference) {
+    .p2m-listen {
+      animation: p2m-listen 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+
+    .p2m-arrive {
+      animation: p2m-arrive 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .p2m-signal {
+      stroke-dasharray: 1;
+      animation: p2m-signal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
+    }
+  }
+
+  @keyframes p2m-signal {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes p2m-listen {
+    from {
+      opacity: 0.55;
+      transform: scale(1);
+    }
+    70%,
+    to {
+      opacity: 0;
+      transform: scale(3.4);
+    }
+  }
+
+  @keyframes p2m-arrive {
+    from {
+      clip-path: inset(0 100% 0 0 round 0.5rem);
+      opacity: 0.4;
+    }
+    to {
+      clip-path: inset(0 0 0 0 round 0.5rem);
+      opacity: 1;
+    }
+  }
+
+  /* Recharts draws a focus rectangle around the plot on click; the bars carry
+   * their own hover state. */
+  .recharts-wrapper:focus,
+  .recharts-surface:focus {
+    outline: none;
+  }
+}

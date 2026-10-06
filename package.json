@@ -1,0 +1,33 @@
+{
+  "name": "postgres2mcp",
+  "version": "0.4.0",
+  "description": "Turn a Postgres database into an MCP server: built-in tools, custom tools, scoped API keys, logs.",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "postgres2mcp": "src/bin.ts"
+  },
+  "scripts": {
+    "start": "bun src/bin.ts serve",
+    "dev": "bun --watch src/bin.ts serve",
+    "dev:web": "cd web && bun run dev",
+    "build:web": "cd web && bun install && bun run build",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit && cd web && tsc -b"
+  },
+  "dependencies": {
+    "@effect/platform-bun": "4.0.0-rc.118",
+    "@effect/sql-sqlite-bun": "4.0.0-rc.118",
+    "effect": "4.0.0-rc.118",
+    "pg": "^8.23.1",
+    "pg-connection-string": "^2.14.1",
+    "pg-cursor": "^2.22.1"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "@types/bun": "latest",
+    "@types/pg": "^8.23.1",
+    "@types/pg-cursor": "^2.7.2",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,63 @@
+# postgres2mcp with Docker Compose.
+#
+#   docker compose up -d
+#
+# Settings come from a .env file next to this one (.env.example lists them);
+# install.sh writes that file for you. Only DATABASE_URL is required, and with
+# nothing else set the server comes up on http://localhost:3333.
+#
+# For a domain with HTTPS, set in .env:
+#
+#   P2M_DOMAIN=mcp.example.com
+#   P2M_PUBLIC_URL=https://mcp.example.com
+#   COMPOSE_PROFILES=tls
+#   P2M_BIND=127.0.0.1
+#
+# The "tls" profile adds Caddy in front, which obtains and renews the
+# certificate; the last line keeps port 3333 off the public interface.
+name: postgres2mcp
+
+services:
+  postgres2mcp:
+    build: .
+    image: postgres2mcp:local
+    restart: unless-stopped
+    ports:
+      - "${P2M_BIND:-127.0.0.1}:${PORT:-3333}:3333"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL to the Postgres database to expose}
+      P2M_PUBLIC_URL: ${P2M_PUBLIC_URL:-}
+      P2M_SETUP_TOKEN: ${P2M_SETUP_TOKEN:-}
+      P2M_ADMIN_USERNAME: ${P2M_ADMIN_USERNAME:-}
+      P2M_ADMIN_PASSWORD: ${P2M_ADMIN_PASSWORD:-}
+      P2M_MAX_ROWS: ${P2M_MAX_ROWS:-1000}
+      P2M_QUERY_TIMEOUT_MS: ${P2M_QUERY_TIMEOUT_MS:-15000}
+      P2M_LOG_RETENTION_DAYS: ${P2M_LOG_RETENTION_DAYS:-30}
+    # Lets DATABASE_URL name a database on this machine as host.docker.internal.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - postgres2mcp-data:/data
+
+  caddy:
+    image: caddy:2
+    profiles: ["tls"]
+    restart: unless-stopped
+    depends_on:
+      - postgres2mcp
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      P2M_DOMAIN: ${P2M_DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates live here; keeping the volume keeps them across restarts.
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  postgres2mcp-data:
+  caddy-data:
+  caddy-config:

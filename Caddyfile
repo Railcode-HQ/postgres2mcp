@@ -1,0 +1,14 @@
+# Caddy in front of postgres2mcp: terminates TLS for P2M_DOMAIN and obtains and
+# renews its certificate from Let's Encrypt. Started by the "tls" profile in
+# docker-compose.yml.
+{$P2M_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		-Server
+	}
+
+	reverse_proxy postgres2mcp:3333
+}

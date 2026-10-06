@@ -1,0 +1,18 @@
+node_modules
+web/dist
+*.tsbuildinfo
+
+# postgres2mcp's own state: admin accounts, API key hashes, custom tools, logs
+data/
+
+.env
+.env.*
+!.env.example
+
+.playwright-mcp/
+.claude/settings.local.json
+.DS_Store
+.local
+
+AGENTS.md
+CLAUDE.md
