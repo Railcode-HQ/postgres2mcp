@@ -4,7 +4,7 @@
 
 Create custom tools from parametrized SQL and determine what tools are accessible or blocked for each generated API key.
 
-![postgres2mcp dashboard](docs/images/dashboard-overview.png)
+![postgres2mcp dashboard](docs/images/overview.png)
 
 ## 🚀 Get started
 
