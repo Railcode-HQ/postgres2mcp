@@ -2,7 +2,7 @@
 // and that it refuses bad input before it touches anything. The steps that
 // build and start containers are exercised by running it for real.
 import { describe, expect, test } from "bun:test"
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs"
+import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { ROOT } from "./harness.ts"
@@ -78,6 +78,30 @@ describe("install.sh", () => {
     expect(badPort.stderr).toContain("is not a port number")
 
     for (const run of [unknown, nothing, notPostgres, badDomain, badPort]) expect(run.left).toEqual([])
+  })
+
+  test("stops at a Docker that does not answer, and says what to do", async () => {
+    // A docker (and a sudo) that are there and fail, ahead of the real ones.
+    const stubs = mkdtempSync(join(tmpdir(), "p2m-stubs-"))
+    for (const name of ["docker", "sudo"]) {
+      writeFileSync(join(stubs, name), "#!/bin/sh\nexit 1\n")
+      chmodSync(join(stubs, name), 0o755)
+    }
+    const result = await install(["--yes", "--database-url", "postgres://u:p@db/app"], {
+      env: { PATH: `${stubs}:${process.env.PATH ?? ""}` }
+    })
+    expect(result.code).toBe(1)
+    expect(result.stderr).toContain("Docker is installed, but not answering.")
+    expect(result.stderr).toContain("systemctl start docker")
+    expect(result.left).toEqual([])
+
+    // What was passed is still judged first: a bad argument is not a reason to look for Docker.
+    const bad = await install(["--yes", "--database-url", "mysql://db/app"], {
+      env: { PATH: `${stubs}:${process.env.PATH ?? ""}` }
+    })
+    rmSync(stubs, { recursive: true, force: true })
+    expect(bad.stderr).toContain("is not a Postgres connection string")
+    expect(bad.stderr).not.toContain("Docker")
   })
 
   test("--uninstall says so when there is nothing installed", async () => {

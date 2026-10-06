@@ -417,7 +417,10 @@ if [ "$UNINSTALL" = 1 ]; then
   exit 0
 fi
 
-# ── the two questions ────────────────────────────────────────────────────────
+# ── what was passed, then Docker, then the two questions ─────────────────────
+# Anything given on the command line is checked first, since that costs nothing.
+# Docker comes next, before a single question: nobody should type a connection
+# string and then learn that the machine cannot run this.
 
 say ""
 if [ "$EXISTING" = 1 ]; then
@@ -428,16 +431,6 @@ if [ "$EXISTING" = 1 ]; then
 fi
 
 valid_database_url() { case "$1" in postgres://?* | postgresql://?*) return 0 ;; *) return 1 ;; esac; }
-
-if [ -z "$DATABASE_URL" ]; then
-  can_ask || die "No database to expose." "Pass --database-url postgres://user:password@host:5432/dbname (or set DATABASE_URL)."
-  while :; do
-    ask DATABASE_URL "Which database should it expose?" "A Postgres connection string: postgres://user:password@host:5432/dbname"
-    if valid_database_url "$DATABASE_URL"; then break; fi
-    printf '  %sThat does not look like a connection string. It starts with postgres:// or postgresql://%s\n' "$YELLOW" "$RESET" >"$TTY"
-  done
-fi
-valid_database_url "$DATABASE_URL" || die "\"$(mask_url "$DATABASE_URL")\" is not a Postgres connection string." "It should look like postgres://user:password@host:5432/dbname"
 
 # A domain as people type it: with a scheme, a path, capitals. Reduced to the name.
 clean_domain() {
@@ -451,13 +444,10 @@ valid_domain() {
   [ "$1" = localhost ] || printf '%s' "$1" | grep -Eq '^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$'
 }
 
-if [ -z "$DOMAIN" ] && [ "$EXISTING" = 0 ] && can_ask; then
-  while :; do
-    ask DOMAIN "Domain for HTTPS?" "Like mcp.example.com. The certificate is handled for you. Leave empty to use port ${PORT:-3333} without TLS."
-    DOMAIN="$(clean_domain "$DOMAIN")"
-    if [ -z "$DOMAIN" ] || valid_domain "$DOMAIN"; then break; fi
-    printf '  %sThat is not a domain name. Enter something like mcp.example.com, or nothing.%s\n' "$YELLOW" "$RESET" >"$TTY"
-  done
+if [ -n "$DATABASE_URL" ]; then
+  valid_database_url "$DATABASE_URL" || die "\"$(mask_url "$DATABASE_URL")\" is not a Postgres connection string." "It should look like postgres://user:password@host:5432/dbname"
+else
+  can_ask || die "No database to expose." "Pass --database-url postgres://user:password@host:5432/dbname (or set DATABASE_URL)."
 fi
 DOMAIN="$(clean_domain "$DOMAIN")"
 if [ -n "$DOMAIN" ]; then
@@ -466,12 +456,29 @@ fi
 PORT="${PORT:-3333}"
 case "$PORT" in *[!0-9]* | "") die "\"$PORT\" is not a port number." ;; esac
 
+need_docker
+
+if [ -z "$DATABASE_URL" ]; then
+  while :; do
+    ask DATABASE_URL "Which database should it expose?" "A Postgres connection string: postgres://user:password@host:5432/dbname"
+    if valid_database_url "$DATABASE_URL"; then break; fi
+    printf '  %sThat does not look like a connection string. It starts with postgres:// or postgresql://%s\n' "$YELLOW" "$RESET" >"$TTY"
+  done
+fi
+
+if [ -z "$DOMAIN" ] && [ "$EXISTING" = 0 ] && can_ask; then
+  while :; do
+    ask DOMAIN "Domain for HTTPS?" "Like mcp.example.com. The certificate is handled for you. Leave empty to use port $PORT without TLS."
+    DOMAIN="$(clean_domain "$DOMAIN")"
+    if [ -z "$DOMAIN" ] || valid_domain "$DOMAIN"; then break; fi
+    printf '  %sThat is not a domain name. Enter something like mcp.example.com, or nothing.%s\n' "$YELLOW" "$RESET" >"$TTY"
+  done
+fi
+
 # After questions were asked, a blank line sets the progress apart from them.
 if [ "$ASKED" = 1 ]; then say ""; fi
 
 # ── checks before anything is changed ────────────────────────────────────────
-
-need_docker
 
 running() { [ -n "$(compose ps --quiet --status running "$1" 2>/dev/null || true)" ]; }
 

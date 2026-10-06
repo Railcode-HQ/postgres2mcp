@@ -25,6 +25,8 @@ curl -fsSL https://raw.githubusercontent.com/Railcode-HQ/postgres2mcp/main/insta
 - The connection string of the database to expose, reachable from that machine.
 - For HTTPS: a domain or subdomain you can create a DNS record for, and ports 80 and 443 open to the internet and not used by something else.
 
+**Before it asks anything**, it checks that Docker with Compose v2 is installed and answering. If not, it stops there and says how to install or start it (on Linux it offers to install Docker for you), so no question is answered for nothing.
+
 **What it asks**
 
 1. *Which database should it expose?* A connection string: `postgres://user:password@host:5432/dbname`.
@@ -32,7 +34,7 @@ curl -fsSL https://raw.githubusercontent.com/Railcode-HQ/postgres2mcp/main/insta
 
 **What it does**, in order:
 
-1. Checks Docker, and that the ports it needs are free.
+1. Checks that the ports it needs are free.
 2. With a domain: looks up the name. If it does not point at the machine yet, it shows the record to create, so you can do that while the next steps run.
 3. Fetches postgres2mcp into `~/postgres2mcp` (`/opt/postgres2mcp` when run as root) and writes its settings to `.env` there, readable only by you.
 4. Builds the image and starts the server.
