@@ -63,6 +63,16 @@ export class Pg extends Context.Service<Pg, {
           catch: toQueryError
         })
 
+      // pg_settings exposes statement_timeout in milliseconds, regardless of
+      // the units used by ALTER ROLE or connection options. Zero disables a
+      // timeout, so keep the smaller nonzero limit (or zero if both are off).
+      const setStatementTimeout = (client: pg.PoolClient, local: boolean) =>
+        send(client, `
+          SELECT set_config('statement_timeout',
+            COALESCE(LEAST(NULLIF(setting::int, 0), NULLIF($1::int, 0)), 0)::text, $2)
+          FROM pg_settings WHERE name = 'statement_timeout'
+        `, [config.queryTimeoutMs, local])
+
       const withClient = <A>(use: (client: pg.PoolClient) => Effect.Effect<A, QueryError>) =>
         Effect.acquireUseRelease(
           Effect.tryPromise({ try: () => pool.connect(), catch: toQueryError }),
@@ -148,7 +158,7 @@ export class Pg extends Context.Service<Pg, {
           return yield* withClient((client) =>
             Effect.gen(function*() {
               const previousTimeout = (yield* send(client, "SHOW statement_timeout")).rows[0].statement_timeout
-              yield* send(client, "SELECT set_config('statement_timeout', $1, false)", [String(config.queryTimeoutMs)])
+              yield* setStatementTimeout(client, false)
               const result = yield* Effect.tryPromise({
                 try: () => client.query({ text: sql, values: [...params], rowMode: "array" }),
                 catch: toQueryError
@@ -167,7 +177,7 @@ export class Pg extends Context.Service<Pg, {
               // A SELECT, so it also takes the transaction's first snapshot —
               // after which Postgres refuses to flip a read-only transaction
               // back to read-write.
-              yield* send(client, "SELECT set_config('statement_timeout', $1, true)", [String(config.queryTimeoutMs)])
+              yield* setStatementTimeout(client, true)
               return yield* readCapped(client, sql, params)
             }).pipe(
               Effect.onError(() => Effect.ignore(send(client, "ROLLBACK")))

@@ -435,8 +435,8 @@ describe("read-only enforcement", () => {
   })
 
   test("session settings do not leak between calls", async () => {
-    await call("query", { sql: "SET statement_timeout = 0" })
-    await call("query", { sql: "SET default_transaction_read_only = off" })
+    expect((await call("query", { sql: "SET statement_timeout = 0" })).status).toBe(200)
+    expect((await call("query", { sql: "SET default_transaction_read_only = off" })).status).toBe(200)
     const response = await call("query", { sql: "DELETE FROM scratch" })
     expect(response.status).toBe(422)
     expect(response.body.code).toBe("25006")

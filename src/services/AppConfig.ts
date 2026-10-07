@@ -32,7 +32,7 @@ export class AppConfig extends Context.Service<AppConfig, {
   readonly maxRows: number
   /** Approximate cap on the serialized size of a result set. */
   readonly maxBytes: number
-  /** Server-side `statement_timeout` applied to every statement. */
+  /** Server-side statement timeout in ms; preserves a shorter connection limit. 0 adds no limit. */
   readonly queryTimeoutMs: number
   /** Log rows older than this are pruned. 0 keeps them forever. */
   readonly logRetentionDays: number

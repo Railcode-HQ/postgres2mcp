@@ -4,6 +4,8 @@
 // The database defaults to `postgres2mcp_test` on a local Postgres; point
 // TEST_DATABASE_URL elsewhere to use another one. Its `public` schema is
 // dropped and rebuilt on every run.
+// Role-permission tests also create temporary login roles; the test connection
+// needs permission to create roles and grant access to the test tables.
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
