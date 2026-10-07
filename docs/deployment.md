@@ -138,7 +138,13 @@ After signing in, the dashboard opens on a short guide: create a key, add the se
 
 ### The database role
 
-postgres2mcp can only do what the role in the connection string can do, so that role is the real limit on every client. Tools that should not write run in read-only transactions, and that is tested against the known ways around it; a role that cannot write is a guarantee.
+Access is controlled at three levels:
+
+- An MCP API key determines which tools a client can call.
+- Read-only tools run each call in an explicit read-only transaction. `query` accepts arbitrary SQL, but still runs it read-only. Fixed, parameterized custom tools can expose specific queries without giving the client arbitrary SQL access.
+- The PostgreSQL role in the connection string determines the database privileges available to every call. Enabling `execute_sql` or a custom tool's `allow_writes` does not grant database permissions.
+
+`ALTER ROLE mcp SET default_transaction_read_only = on` only sets a default for new connections. A client that can execute arbitrary SQL can run `SET default_transaction_read_only = off`; subsequent transactions can then write if the role has write privileges. postgres2mcp's read-only tools explicitly start read-only transactions independently of that default. Use database grants to restrict a read-only deployment, rather than relying on the default. See PostgreSQL's [transaction defaults](https://www.postgresql.org/docs/18/runtime-config-client.html#GUC-DEFAULT-TRANSACTION-READ-ONLY).
 
 For a server that only reads:
 
@@ -147,6 +153,7 @@ CREATE ROLE mcp LOGIN PASSWORD 'choose-a-long-one';
 GRANT CONNECT ON DATABASE app TO mcp;
 GRANT pg_read_all_data TO mcp;   -- Postgres 14+: SELECT on every table and view
 GRANT pg_monitor TO mcp;         -- optional: lets the monitoring tools see all activity and sizes
+ALTER ROLE mcp SET statement_timeout = '15s';
 ```
 
 To expose only some of it, grant per schema or per table instead of `pg_read_all_data`:
@@ -154,10 +161,20 @@ To expose only some of it, grant per schema or per table instead of `pg_read_all
 ```sql
 GRANT USAGE ON SCHEMA public TO mcp;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO mcp;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO mcp;   -- tables created later
+ALTER DEFAULT PRIVILEGES FOR ROLE app_owner IN SCHEMA public GRANT SELECT ON TABLES TO mcp;
 ```
 
+Replace `app_owner` with the role that creates the tables, and run that command as that role or an administrator allowed to change its default privileges. Repeat it for each creator role and schema. Default privileges apply to future objects created by the named role; the preceding `GRANT` handles existing tables. See [ALTER DEFAULT PRIVILEGES](https://www.postgresql.org/docs/18/sql-alterdefaultprivileges.html).
+
+Use a dedicated role that does not own application objects or have superuser privileges. Adding `SELECT` grants does not remove existing write access: also review grants through `PUBLIC`, role memberships (including roles it can switch to), schema creation privileges, and executable `SECURITY DEFINER` functions that could write with their owner's privileges. The grants above alone do not make an existing, more powerful role read-only. See PostgreSQL's [privilege model](https://www.postgresql.org/docs/18/ddl-priv.html).
+
 Give it write privileges only if you intend to hand some client `execute_sql` or a custom tool with writes allowed.
+
+### Query timeouts
+
+The role's `statement_timeout` provides a default for new connections, including clients outside postgres2mcp. For each call, postgres2mcp uses the shorter nonzero value of the connection's timeout and `P2M_QUERY_TIMEOUT_MS` (default: `15000`). Zero disables that particular limit; the timeout is disabled only if both values are zero. This applies to read and write calls, including commands such as `VACUUM` that run outside a transaction.
+
+The app reapplies the timeout on every call and clears session changes before reusing a connection. A role timeout is still an overridable session setting, not an immutable resource limit for arbitrary SQL. See PostgreSQL's [statement timeout](https://www.postgresql.org/docs/18/runtime-config-client.html#GUC-STATEMENT-TIMEOUT).
 
 ### Connection strings
 

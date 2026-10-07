@@ -87,7 +87,7 @@ If used for giving employees access to production data, consider only making it 
 
 Also make sure you:
 
-* Follow the principle of least privilege and set up an appropriate role that `postgres2mcp` has access to.
+* Follow the principle of least privilege and set up an appropriate role that `postgres2mcp` has access to. For read-only access, restrict the role's database privileges; `default_transaction_read_only` is an overridable default. See the [database role setup](docs/deployment.md#the-database-role).
 * Set a strong admin password. We intend to add support for 2FA for admins soon.
 
 Lastly, note that this repo has been kept intentionally small so it should be very easy for a human or coding agent to audit its security.
