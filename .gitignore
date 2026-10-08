@@ -1,5 +1,6 @@
 node_modules
 web/dist
+dist/
 *.tsbuildinfo
 
 # postgres2mcp's own state: admin accounts, API key hashes, custom tools, logs

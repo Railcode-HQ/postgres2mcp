@@ -7,6 +7,7 @@ import { Argument, Command, Flag, Prompt } from "effect/cli"
 import { randomBytes } from "node:crypto"
 import { existsSync } from "node:fs"
 import { join, resolve } from "node:path"
+import { findWebDir } from "./dashboard.ts"
 import { HttpLayer, ServicesLayer } from "./server.ts"
 import { AppConfig, DEFAULTS } from "./services/AppConfig.ts"
 import { Auth } from "./services/Auth.ts"
@@ -80,21 +81,6 @@ const parsePublicUrl = (value: string): Effect.Effect<string | null, UsageError>
     )
   }
   return Effect.succeed(`${url.origin}${url.pathname.replace(/\/+$/, "")}`)
-}
-
-/**
- * The built dashboard. P2M_WEB_DIR, when set, is the only place looked at (so
- * pointing it somewhere empty runs without one); otherwise the build next to
- * the source, or under the working directory, is picked up if it exists.
- */
-const findWebDir = (): string | null => {
-  const hasBuild = (dir: string) => existsSync(join(dir, "index.html"))
-  const explicit = process.env.P2M_WEB_DIR
-  if (explicit !== undefined && explicit !== "") return hasBuild(explicit) ? resolve(explicit) : null
-  for (const candidate of [join(import.meta.dir, "../web/dist"), join(process.cwd(), "web/dist")]) {
-    if (hasBuild(candidate)) return resolve(candidate)
-  }
-  return null
 }
 
 // ── serve ────────────────────────────────────────────────────────────────────
@@ -188,7 +174,7 @@ export const serve = Command.make(
       queryTimeoutMs: flags.queryTimeoutMs,
       logRetentionDays: flags.logRetentionDays,
       poolSize: DEFAULTS.poolSize,
-      webDir: findWebDir()
+      webDir: findWebDir(flags.dataDir)
     })
     // Services are built once and shared by the routes and the banner.
     const services = ServicesLayer.pipe(Layer.provideMerge(config))

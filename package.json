@@ -12,6 +12,8 @@
     "dev": "bun --watch src/bin.ts serve",
     "dev:web": "cd web && bun run dev",
     "build:web": "cd web && bun install && bun run build",
+    "build:binary": "bun scripts/build-binary.ts",
+    "test:binary": "bun test test/binary.test.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit && cd web && tsc -b"
   },
