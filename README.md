@@ -21,6 +21,8 @@ or tell your coding agent:
 Read https://raw.githubusercontent.com/Railcode-HQ/postgres2mcp/main/install.sh and help me install and run postgres2mcp on this machine
 ```
 
+To build a standalone executable with its dashboard included, see [Building a standalone binary](docs/binaries.md).
+
 ## Features
 
 * Built-in tools for common use cases
